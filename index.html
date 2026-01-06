@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ezra – Academic & Daily Operations System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{--primary:#1e40af;--accent:#22c55e;--bg:#f8fafc;--card:#ffffff;--muted:#64748b;}
+*{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto}
+body{margin:0;background:var(--bg);color:#0f172a}
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:18px}
+header h1{margin:0;font-size:1.4rem}
+header p{margin:4px 0 0;opacity:.9;font-size:.9rem}
+.container{max-width:1200px;margin:auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.06)}
+.card h3{margin:0 0 10px;font-size:1rem}
+label{font-size:.8rem;color:var(--muted)}
+input,textarea,select{width:100%;padding:8px;border-radius:8px;border:1px solid #e5e7eb;margin:4px 0 8px}
+textarea{min-height:70px;resize:vertical}
+button{padding:10px 14px;border:none;border-radius:10px;cursor:pointer;font-weight:500}
+.save{background:var(--accent);color:#fff}
+.ghost{background:#e5e7eb}
+.entry{border:1px solid #e5e7eb;border-radius:10px;padding:8px;margin-bottom:8px;position:relative}
+.remove-btn{position:absolute;top:5px;right:5px;background:#f87171;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:bold}
+</style>
+</head>
+<body>
+<header>
+<h1>🎓 Ezra – Academic & Daily Operations</h1>
+<p>Editable Daily Tracker with Multi-Entry Sections & Styled PDF Export</p>
+</header>
+<div class="container">
+<!-- Sections as before... -->
+
+<div class="card">
+<h3>📅 Daily Overview</h3>
+<label>Date</label><input type="date" id="date" />
+<label>Main Focus</label><input id="mainFocus" placeholder="Focus of the day" />
+<label>Daily Goals / Checklist</label><textarea id="dailyGoals" placeholder="3-5 goals for today"></textarea>
+<label>Mood Tracker</label><select id="mood"><option>😊 Great</option><option>😐 Okay</option><option>😔 Low</option><option>😡 Stressed</option></select>
+<label>Priority Tasks</label><input id="priorityTasks" placeholder="Top 1-2 critical tasks" />
+</div>
+
+<!-- UNIT REVISION -->
+<div class="card">
+<h3>📖 Unit Revision & Self‑Study</h3>
+<div id="revisionContainer"></div>
+<button class="save" id="addRevisionBtn">+ Add Unit Revision</button>
+</div>
+
+<!-- OTHER ACTIVITIES -->
+<div class="card">
+<h3>🎯 Other Activities</h3>
+<div id="activitiesContainer"></div>
+<button class="save" id="addActivityBtn">+ Add Activity</button>
+</div>
+
+<!-- MEALS -->
+<div class="card">
+<h3>🍽️ Meals</h3>
+<div id="mealsContainer"></div>
+<button class="save" id="addMealBtn">+ Add Meal</button>
+</div>
+
+<!-- SKILL & PROJECT -->
+<div class="grid">
+<div class="card">
+<h3>💻 Skill Development</h3>
+<div id="skillsContainer"></div>
+<button class="save" id="addSkillBtn">+ Add Skill</button>
+</div>
+<div class="card">
+<h3>🧪 Practice & Projects</h3>
+<div id="projectsContainer"></div>
+<button class="save" id="addProjectBtn">+ Add Project</button>
+</div>
+</div>
+
+<!-- TRANSACTIONS & INTERACTIONS -->
+<div class="grid">
+<div class="card">
+<h3>💰 Transactions</h3>
+<div id="transactionsContainer"></div>
+<button class="save" id="addTransactionBtn">+ Add Transaction</button>
+</div>
+<div class="card">
+<h3>🤝 Interactions</h3>
+<div id="interactionsContainer"></div>
+<button class="save" id="addInteractionBtn">+ Add Interaction</button>
+</div>
+</div>
+
+<!-- REFLECTION -->
+<div class="card">
+<h3>🧠 Reflection</h3>
+<textarea id="reflectionChallenges" placeholder="Challenges / Notes"></textarea>
+<textarea id="reflectionWins" placeholder="Wins / Achievements"></textarea>
+<textarea id="reflectionLessons" placeholder="Lessons Learned"></textarea>
+</div>
+
+<!-- ACTIONS -->
+<div class="card">
+<button class="save" id="saveBtn">Save Day</button>
+<button class="ghost" id="resetBtn">Reset</button>
+<button class="save" id="exportPdfBtn">Export Self-Explaining PDF</button>
+</div>
+
+</div>
+</div>
+<footer>Built for Ezra • Interactive Daily Tracker</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const units=['COMP 213','COMP 214','COMP 215','MATH 212','SHUM 211','BCOM 212','BITC 211','BITC 212'];
+function createEntry(container, fields){
+  const div=document.createElement('div'); div.className='entry';
+  fields.forEach(f=>{
+    if(f.type==='select'){
+      const sel=document.createElement('select'); f.options.forEach(o=>{
+        const opt=document.createElement('option'); opt.value=o; opt.text=o; sel.appendChild(opt);
+      }); sel.dataset.label=f.label; div.appendChild(sel);
+    } else {
+      const input=f.type==='textarea'?document.createElement('textarea'):document.createElement('input');
+      input.placeholder=f.label; input.dataset.label=f.label; div.appendChild(input);
+    }
+  });
+  const btn=document.createElement('button'); btn.innerText='×'; btn.className='remove-btn'; btn.onclick=()=>div.remove(); div.appendChild(btn);
+  container.appendChild(div);
+}
+// Containers as before...
+// Add entry buttons as before...
+// Save & Load as before...
+
+// Containers
+const revisionContainer=document.getElementById('revisionContainer');
+const activitiesContainer=document.getElementById('activitiesContainer');
+const mealsContainer=document.getElementById('mealsContainer');
+const skillsContainer=document.getElementById('skillsContainer');
+const projectsContainer=document.getElementById('projectsContainer');
+const transactionsContainer=document.getElementById('transactionsContainer');
+const interactionsContainer=document.getElementById('interactionsContainer');
+
+// Buttons & Add Entry
+document.getElementById('addRevisionBtn').onclick=()=>createEntry(revisionContainer,[
+  {type:'select',label:'Unit',options:units},
+  {type:'text',label:'Revision Focus'},
+  {type:'select',label:'Revision Type',options:['Reading','Practice','Past Papers','Group Discussion']},
+  {type:'text',label:'Time Spent'},
+  {type:'textarea',label:'Key Takeaways / Weak Areas'}
+]);
+
+document.getElementById('addActivityBtn').onclick=()=>createEntry(activitiesContainer,[
+  {type:'text',label:'Activity Name'},
+  {type:'text',label:'Time / Duration'},
+  {type:'textarea',label:'Details / Outcome'},
+  {type:'text',label:'Category / Tags'}
+]);
+
+document.getElementById('addMealBtn').onclick=()=>createEntry(mealsContainer,[
+  {type:'select',label:'Meal Type',options:['Breakfast','Lunch','Dinner','Snack']},
+  {type:'text',label:'Food Items'},
+  {type:'text',label:'Calories'},
+  {type:'textarea',label:'Notes / Feeling'},
+  {type:'text',label:'Hydration / Water Intake'}
+]);
+
+document.getElementById('addSkillBtn').onclick=()=>createEntry(skillsContainer,[
+  {type:'text',label:'Skill / Technology'},
+  {type:'text',label:'Time Spent'},
+  {type:'textarea',label:'What I Learned'}
+]);
+
+document.getElementById('addProjectBtn').onclick=()=>createEntry(projectsContainer,[
+  {type:'text',label:'Project Name'},
+  {type:'textarea',label:'Work Done Today'},
+  {type:'select',label:'Git Commit',options:['Yes','No']}
+]);
+
+document.getElementById('addTransactionBtn').onclick=()=>createEntry(transactionsContainer,[
+  {type:'select',label:'Type',options:['Income','Expense']},
+  {type:'text',label:'Amount'},
+  {type:'text',label:'Category'},
+  {type:'textarea',label:'Short Description'}
+]);
+
+document.getElementById('addInteractionBtn').onclick=()=>createEntry(interactionsContainer,[
+  {type:'text',label:'Person / Group'},
+  {type:'select',label:'Type',options:['Academic','Social','Professional','Personal']},
+  {type:'text',label:'Topic / Discussion'},
+  {type:'text',label:'Impact (1-5)'},
+  {type:'textarea',label:'Outcome / Notes'}
+]);
+
+// Save Day
+document.getElementById('saveBtn').onclick=()=>{
+  const data={};
+  document.querySelectorAll('input,textarea,select').forEach(el=>{
+    if(el.dataset.label){
+      if(!data[el.dataset.label]) data[el.dataset.label]=[];
+      data[el.dataset.label].push(el.value);
+    } else {
+      data[el.id]=el.value;
+    }
+  });
+  localStorage.setItem('dailyData',JSON.stringify(data));
+  alert('Day saved locally!');
+};
+
+// Load Day
+window.onload=()=>{
+  const saved=JSON.parse(localStorage.getItem('dailyData')||'{}');
+  Object.keys(saved).forEach(label=>{
+    const arr=saved[label];
+    arr.forEach((val,i)=>{
+      const containerMap={
+        'Unit':revisionContainer,'Revision Focus':revisionContainer,'Revision Type':revisionContainer,'Time Spent':revisionContainer,'Key Takeaways / Weak Areas':revisionContainer,
+        'Activity Name':activitiesContainer,'Time / Duration':activitiesContainer,'Details / Outcome':activitiesContainer,'Category / Tags':activitiesContainer,
+        'Meal Type':mealsContainer,'Food Items':mealsContainer,'Calories':mealsContainer,'Notes / Feeling':mealsContainer,'Hydration / Water Intake':mealsContainer,
+        'Skill / Technology':skillsContainer,'What I Learned':skillsContainer,'Time Spent':skillsContainer,
+        'Project Name':projectsContainer,'Work Done Today':projectsContainer,'Git Commit':projectsContainer,
+        'Type':transactionsContainer,'Amount':transactionsContainer,'Category':transactionsContainer,'Short Description':transactionsContainer,
+        'Person / Group':interactionsContainer,'Topic / Discussion':interactionsContainer,'Impact (1-5)':interactionsContainer,'Outcome / Notes':interactionsContainer
+      };
+      if(containerMap[label]){
+        if(containerMap[label].children.length<=i) document.querySelector(`#add${containerMap[label].id.replace('Container','Btn')}`).click();
+        const entry=containerMap[label].children[i];
+        Array.from(entry.querySelectorAll('[data-label]')).forEach(inp=>{if(inp.dataset.label===label) inp.value=val;});
+      } else {
+        const el=document.getElementById(label);
+        if(el) el.value=val;
+      }
+    });
+  });
+};
+
+// Reset
+document.getElementById('resetBtn').onclick=()=>{localStorage.removeItem('dailyData');window.location.reload();};
+
+// Export PDF with styling
+document.getElementById('exportPdfBtn').onclick=()=>{
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');
+  let y=15,lineHeight=7,pageHeight=280;
+
+  function addSection(title){
+    if(y>pageHeight){doc.addPage(); y=15;}
+    doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    doc.setFillColor(30,144,255); doc.rect(10,y-5,190,8,'F'); doc.text(title,12,y); y+=lineHeight+2;
+    doc.setFont('helvetica','normal'); doc.setFontSize(12); doc.setTextColor(20,20,20);
+  }
+
+  function addKey(label,value){
+    if(y>pageHeight){doc.addPage(); y=15;}
+    doc.setTextColor(0,0,0); doc.setFont('helvetica','bold'); doc.text(label+':',12,y);
+    if(value){const lines=doc.splitTextToSize(value,170); doc.setFont('helvetica','normal'); doc.text(lines,50,y); y+=lines.length*lineHeight;} else y+=lineHeight;
+    y+=2;
+  }
+
+  // Example for Overview
+  addSection('📅 Daily Overview');
+  ['date','mainFocus','dailyGoals','mood','priorityTasks'].forEach(id=>addKey(id.replace(/([A-Z])/g,' $1'),document.getElementById(id).value));
+
+  // Dynamic sections function (styled headers and bullet entries)
+  function addDynamicSection(title,container){
+    addSection(title);
+    Array.from(container.children).forEach((entry,i)=>{
+      doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+      doc.text(`• Entry ${i+1}`,12,y); y+=lineHeight;
+      Array.from(entry.querySelectorAll('[data-label]')).forEach(inp=>addKey(inp.dataset.label,inp.value));
+    });
+  }
+
+  addDynamicSection('📖 Unit Revisions',revisionContainer);
+  addDynamicSection('🎯 Other Activities',activitiesContainer);
+  addDynamicSection('🍽️ Meals',mealsContainer);
+  addDynamicSection('💻 Skills',skillsContainer);
+  addDynamicSection('🧪 Projects',projectsContainer);
+  addDynamicSection('💰 Transactions',transactionsContainer);
+  addDynamicSection('🤝 Interactions',interactionsContainer);
+
+  addSection('🧠 Reflections');
+  ['reflectionChallenges','reflectionWins','reflectionLessons'].forEach(id=>addKey(id.replace(/([A-Z])/g,' $1'),document.getElementById(id).value));
+
+  doc.save('Ezra_Daily_Journal_Styled.pdf');
+};
+</script>
+</body>
+</html>
